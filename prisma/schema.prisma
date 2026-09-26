@@ -1,0 +1,62 @@
+// Prisma Schema for Spendly — Supabase PostgreSQL & Gemini AI UPI Expense Tracker
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String   @default("Shreyas Hathiwala")
+  email     String   @unique @default("shreyas@hathiwala.com")
+  password  String   // Shreyas@3155 (hashed or verified)
+  role      String   @default("OWNER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Column 1: Date
+  date             String
+  // Column 2: Payee / Description
+  payee            String
+  // Column 3: Amount
+  amount           Float
+  // Column 4: Category
+  category         String
+  // Column 5: Reference No. / UTR
+  referenceNo      String
+  // Column 6: Notes
+  notes            String?  @db.Text
+  // Column 7: Bank Notification / Details
+  bankNotification String?  @db.Text
+  // Column 8: Message ID (Gmail message ID for deduplication)
+  messageId        String   @unique
+  // Column 9: Type (Debit / Credit)
+  type             String
+  // Column 10: Source / Method
+  source           String
+
+  // AI Parser Metadata
+  aiParsed         Boolean  @default(true)
+  aiModel          String?  @default("Gemini 1.5 Flash")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([date])
+  @@index([category])
+  @@index([type])
+  @@index([referenceNo])
+}
