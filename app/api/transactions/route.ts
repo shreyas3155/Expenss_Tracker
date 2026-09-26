@@ -4,6 +4,8 @@ import { BankTransaction } from "@/types/bankTransaction";
 
 export const dynamic = "force-dynamic";
 
+export const USER_ID = "3f7ae45f-527a-4179-9077-b6009df92b7e";
+
 export async function GET() {
   try {
     const transactions = await getTransactions();

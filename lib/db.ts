@@ -1,100 +1,84 @@
-import { prisma } from "./prisma";
+import { supabase, USER_ID } from "./supabase";
 import { BankTransaction } from "@/types/bankTransaction";
 
+export { USER_ID };
+
 /**
- * Fetch all transactions from Supabase PostgreSQL via Prisma
- * Returns empty array if no transactions exist in the database.
+ * Fetch all transactions from Supabase filtered by user_id = '3f7ae45f-527a-4179-9077-b6009df92b7e'
+ * Returns all rows mapped to BankTransaction format.
  */
 export async function getTransactions(): Promise<BankTransaction[]> {
   try {
-    const dbTransactions = await prisma.transaction.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const { data: dbTransactions, error } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", USER_ID)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching transactions from Supabase:", error);
+      return [];
+    }
 
     if (!dbTransactions || dbTransactions.length === 0) {
       return [];
     }
 
-    return dbTransactions.map((tx) => ({
+    return dbTransactions.map((tx: any) => ({
       id: tx.id,
-      date: tx.date,
-      payee: tx.payee,
-      amount: tx.amount,
-      category: tx.category,
-      referenceNo: tx.referenceNo,
-      notes: tx.notes || "",
-      bankNotification: tx.bankNotification || "",
-      messageId: tx.messageId,
-      type: tx.type as "Debit" | "Credit",
-      source: tx.source,
-      aiParsed: tx.aiParsed,
-      aiModel: tx.aiModel || "Gemini 1.5 Flash",
+      date: tx.date || "",
+      payee: tx.merchant || tx.payee || "Unknown Payee",
+      amount: Number(tx.amount) || 0,
+      category: tx.category || "Other",
+      referenceNo: tx.upi_ref || tx.referenceNo || "N/A",
+      notes: tx.note || tx.notes || "",
+      bankNotification: tx.raw_message || tx.bankNotification || "",
+      messageId: tx.email_id || tx.messageId || tx.id,
+      type: (tx.type === "Credit" ? "Credit" : "Debit") as "Credit" | "Debit",
+      source: tx.parsed_by || tx.source || "Supabase",
+      aiParsed: Boolean(tx.parsed_by?.toLowerCase().includes("ai")),
+      aiModel: tx.parsed_by || "Gemini 1.5 Flash",
     }));
   } catch (error) {
-    console.error("Error fetching transactions from Supabase PostgreSQL:", error);
+    console.error("Error fetching transactions from Supabase:", error);
     return [];
   }
 }
 
 /**
- * Save new 10-column transaction into PostgreSQL via Prisma
+ * Save new transaction into Supabase PostgreSQL
  */
 export async function saveTransaction(tx: BankTransaction): Promise<boolean> {
   try {
-    await prisma.transaction.upsert({
-      where: { messageId: tx.messageId },
-      update: {
-        payee: tx.payee,
-        amount: tx.amount,
-        category: tx.category,
-        referenceNo: tx.referenceNo,
-        notes: tx.notes,
-        bankNotification: tx.bankNotification,
-        type: tx.type,
-        source: tx.source,
-      },
-      create: {
-        id: tx.id,
-        date: tx.date,
-        payee: tx.payee,
-        amount: tx.amount,
-        category: tx.category,
-        referenceNo: tx.referenceNo,
-        notes: tx.notes,
-        bankNotification: tx.bankNotification,
-        messageId: tx.messageId,
-        type: tx.type,
-        source: tx.source,
-        aiParsed: tx.aiParsed ?? true,
-        aiModel: tx.aiModel || "Gemini 1.5 Flash",
-      },
+    const { error } = await supabase.from("transactions").upsert({
+      id: tx.id,
+      user_id: USER_ID,
+      date: tx.date,
+      merchant: tx.payee,
+      amount: tx.amount,
+      category: tx.category,
+      upi_ref: tx.referenceNo,
+      note: tx.notes || "",
+      raw_message: tx.bankNotification || "",
+      email_id: tx.messageId,
+      type: tx.type,
+      parsed_by: tx.source || tx.aiModel || "Manual Entry",
     });
+
+    if (error) {
+      console.warn("Could not write transaction to Supabase:", error);
+      return false;
+    }
     return true;
   } catch (error) {
-    console.warn("Could not write transaction to PostgreSQL:", error);
+    console.warn("Could not write transaction to Supabase:", error);
     return false;
   }
 }
 
 /**
- * Seed initial user Shreyas Hathiwala & default transactions into PostgreSQL
+ * Seed initial user Shreyas Hathiwala & default transactions check
  */
 export async function seedInitialUserAndData() {
-  try {
-    // 1. Upsert single authorized user
-    await prisma.user.upsert({
-      where: { email: "shreyas@hathiwala.com" },
-      update: {},
-      create: {
-        name: "Shreyas Hathiwala",
-        email: "shreyas@hathiwala.com",
-        password: "Shreyas@3155",
-        role: "OWNER",
-      },
-    });
-
-    console.log("PostgreSQL seed check completed (user configured)");
-  } catch (err) {
-    console.warn("PostgreSQL seed skipped:", err);
-  }
+  console.log("Supabase transactions initialized with USER_ID:", USER_ID);
 }
