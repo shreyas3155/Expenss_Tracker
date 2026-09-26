@@ -67,7 +67,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#F5D547]" />
             <h3 className="text-base sm:text-lg font-bold text-[#1A1A1A]">
-              10-Column Bank Email & Gemini Ledger
+              10-Column Bank Expense Ledger
             </h3>
           </div>
           <p className="text-xs text-black/50 mt-0.5">

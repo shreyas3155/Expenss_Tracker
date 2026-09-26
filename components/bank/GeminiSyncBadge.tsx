@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, RefreshCw, Mail, CheckCircle2, Code2, ExternalLink } from "lucide-react";
+import { Database, RefreshCw, Mail, CheckCircle2, Code2, ExternalLink } from "lucide-react";
 
 interface GeminiSyncBadgeProps {
   onSync: () => void;
@@ -20,30 +20,31 @@ export const GeminiSyncBadge: React.FC<GeminiSyncBadgeProps> = ({
 }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 bg-white/70 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-black/5 shadow-2xs">
-      {/* Left: AI & Script Status */}
+      {/* Left: DB & Script Status */}
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        {/* Gemini AI Status Badge */}
+        {/* Supabase Status Badge */}
         <div className="flex items-center gap-1.5 bg-[#1A1A1A] text-white px-3 py-1 rounded-full text-xs font-semibold shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#F5D547] animate-pulse" />
-          <span>Gemini AI Parser</span>
-          <span className="bg-[#F5D547] text-[#1A1A1A] text-[10px] font-bold px-1.5 py-0.2 rounded-full ml-1">
-            Active
+          <Database className="w-3.5 h-3.5 text-[#F5D547]" />
+          <span>Supabase DB</span>
+          <span className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full ml-1 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            Live
           </span>
         </div>
 
         {/* Gmail Auto Sync Status */}
         <div className="flex items-center gap-1.5 bg-[#F6F3EB] border border-black/5 px-3 py-1 rounded-full text-xs text-[#1A1A1A] font-medium">
           <Mail className="w-3.5 h-3.5 text-black/60" />
-          <span className="hidden sm:inline">Gmail Auto-Sync:</span>
+          <span className="hidden sm:inline">Bank Email Sync:</span>
           <span className="font-semibold text-emerald-700 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-            Every 1 min
+            Active
           </span>
         </div>
 
-        {/* Parsed Count */}
+        {/* Stored Count */}
         <div className="text-[11px] text-black/50 hidden md:block">
-          <strong className="text-[#1A1A1A] font-bold">{totalParsedCount}</strong> emails auto-parsed to Excel schema
+          <strong className="text-[#1A1A1A] font-bold">{totalParsedCount}</strong> transactions in database
         </div>
       </div>
 

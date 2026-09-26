@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, TrendingDown, Database } from "lucide-react";
 import { ExpenseSummary, TimeframeFilter } from "@/types/bankTransaction";
 
 interface BankKpiCardsProps {
@@ -128,25 +128,25 @@ export const BankKpiCards: React.FC<BankKpiCardsProps> = ({
         </div>
       </div>
 
-      {/* CARD 4: Gemini AI Auto-Parsed Count */}
+      {/* CARD 4: Total Database Records */}
       <div className="bg-[#1E1E1E] text-white rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 shadow-sm flex flex-col justify-between group">
         <div className="flex items-center justify-between">
           <span className="text-[11px] sm:text-xs font-semibold text-white/60 truncate">
-            Gemini AI Sync
+            Total Records
           </span>
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 text-[#F5D547] flex items-center justify-center shrink-0">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <Database className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
         </div>
 
         <div className="my-1.5 sm:my-2">
           <div className="text-lg sm:text-2xl lg:text-3xl font-extrabold text-white tabular-nums tracking-tight truncate">
-            {summary.aiParsedCount} / {summary.transactionCount}
+            {summary.transactionCount} Txns
           </div>
         </div>
 
         <div className="flex items-center justify-between text-[10px] sm:text-[11px] pt-1.5 sm:pt-2 border-t border-white/10">
-          <span className="text-white/60 font-medium truncate">Auto-Categorized</span>
+          <span className="text-white/60 font-medium truncate">Supabase DB</span>
           <span className="font-bold text-[#F5D547] text-[10px] sm:text-xs shrink-0">100% Synced</span>
         </div>
       </div>

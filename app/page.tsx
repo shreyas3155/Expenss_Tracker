@@ -1,9 +1,9 @@
 import { AutomaticBankDashboard } from "@/components/bank/AutomaticBankDashboard";
 
 export const metadata = {
-  title: "Spendly — Automated Bank Email & Gemini AI Expense Tracker",
+  title: "Spendly — Personal Finance & Bank Expense Tracker",
   description:
-    "Real-time personal finance dashboard connected with Gmail, Gemini AI parser, and Google Sheets 10-column ledger.",
+    "Real-time personal finance dashboard connected with Supabase PostgreSQL and automated bank email sync.",
 };
 
 export default function Home() {

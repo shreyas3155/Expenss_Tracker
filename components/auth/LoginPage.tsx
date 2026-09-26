@@ -88,7 +88,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             Welcome, Shreyas
           </h1>
           <p className="text-xs text-black/50 mt-1 font-medium leading-relaxed px-2">
-            Enter your master password to access your Gemini AI bank expense dashboard.
+            Enter your master password to access your personal bank expense dashboard.
           </p>
         </div>
 

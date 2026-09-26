@@ -47,8 +47,8 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
         {/* Modal Header */}
         <div className="flex items-center gap-2 mb-1">
           <div className="flex items-center gap-1.5 bg-[#1A1A1A] text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
-            <Sparkles className="w-3 h-3 text-[#F5D547]" />
-            <span>Gemini AI Parse Result</span>
+            <Receipt className="w-3 h-3 text-[#F5D547]" />
+            <span>Bank Transaction Details</span>
           </div>
           <span className="text-xs text-black/50">• {transaction.date}</span>
         </div>
