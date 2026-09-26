@@ -77,6 +77,65 @@ export async function saveTransaction(tx: BankTransaction): Promise<boolean> {
 }
 
 /**
+ * Update an existing transaction in Supabase (e.g. change category, payee, amount, etc.)
+ */
+export async function updateTransaction(
+  id: string,
+  updates: Partial<BankTransaction>
+): Promise<boolean> {
+  try {
+    const updatePayload: Record<string, any> = {};
+
+    if (updates.payee !== undefined) updatePayload.merchant = updates.payee;
+    if (updates.amount !== undefined) updatePayload.amount = Number(updates.amount);
+    if (updates.category !== undefined) updatePayload.category = updates.category;
+    if (updates.referenceNo !== undefined) updatePayload.upi_ref = updates.referenceNo;
+    if (updates.notes !== undefined) updatePayload.note = updates.notes;
+    if (updates.bankNotification !== undefined) updatePayload.raw_message = updates.bankNotification;
+    if (updates.type !== undefined) updatePayload.type = updates.type;
+    if (updates.date !== undefined) updatePayload.date = updates.date;
+    if (updates.source !== undefined) updatePayload.parsed_by = updates.source;
+
+    const { error } = await supabase
+      .from("transactions")
+      .update(updatePayload)
+      .eq("id", id)
+      .eq("user_id", USER_ID);
+
+    if (error) {
+      console.warn("Could not update transaction in Supabase:", error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.warn("Could not update transaction in Supabase:", error);
+    return false;
+  }
+}
+
+/**
+ * Delete a transaction from Supabase
+ */
+export async function deleteTransaction(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", USER_ID);
+
+    if (error) {
+      console.warn("Could not delete transaction from Supabase:", error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.warn("Could not delete transaction from Supabase:", error);
+    return false;
+  }
+}
+
+/**
  * Seed initial user Shreyas Hathiwala & default transactions check
  */
 export async function seedInitialUserAndData() {

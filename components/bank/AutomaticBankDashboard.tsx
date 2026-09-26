@@ -28,6 +28,23 @@ export const AutomaticBankDashboard: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [addModalType, setAddModalType] = useState<"Credit" | "Debit">("Debit");
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
+  const [inspectorMode, setInspectorMode] = useState<"view" | "edit">("view");
+
+  const handleUpdateTransaction = async (updated: BankTransaction) => {
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === updated.id ? updated : t))
+    );
+    if (selectedTx && selectedTx.id === updated.id) {
+      setSelectedTx(updated);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    if (selectedTx && selectedTx.id === id) {
+      setSelectedTx(null);
+    }
+  };
 
   // Fetch real transactions from Supabase API
   const loadTransactions = useCallback(async () => {
@@ -371,7 +388,14 @@ export const AutomaticBankDashboard: React.FC = () => {
           <div className="lg:col-span-8">
             <BankTransactionsTable
               transactions={filteredTransactions}
-              onSelectTransaction={(tx) => setSelectedTx(tx)}
+              onSelectTransaction={(tx) => {
+                setSelectedTx(tx);
+                setInspectorMode("view");
+              }}
+              onEditTransaction={(tx) => {
+                setSelectedTx(tx);
+                setInspectorMode("edit");
+              }}
               onExportCsv={handleExportCsv}
               isLoading={isLoading}
             />
@@ -379,10 +403,13 @@ export const AutomaticBankDashboard: React.FC = () => {
         </section>
       </main>
 
-      {/* Raw Bank Email & AI Parser Inspection Modal */}
+      {/* Raw Bank Email & AI Parser Inspection Modal with Edit & Delete */}
       <TransactionInspectorModal
         transaction={selectedTx}
+        initialMode={inspectorMode}
         onClose={() => setSelectedTx(null)}
+        onUpdateTransaction={handleUpdateTransaction}
+        onDeleteTransaction={handleDeleteTransaction}
       />
 
       {/* Google Apps Script & Gemini Setup Guide Modal */}

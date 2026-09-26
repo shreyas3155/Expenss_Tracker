@@ -13,12 +13,14 @@ import {
   CreditCard,
   Building2,
   Mail,
+  Edit3,
 } from "lucide-react";
 import { BankTransaction } from "@/types/bankTransaction";
 
 interface BankTransactionsTableProps {
   transactions: BankTransaction[];
   onSelectTransaction: (tx: BankTransaction) => void;
+  onEditTransaction?: (tx: BankTransaction) => void;
   onExportCsv: () => void;
   isLoading?: boolean;
 }
@@ -26,6 +28,7 @@ interface BankTransactionsTableProps {
 export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
   transactions,
   onSelectTransaction,
+  onEditTransaction,
   onExportCsv,
   isLoading = false,
 }) => {
@@ -48,9 +51,11 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
         return "bg-purple-100 text-purple-900 border-purple-200";
       case "groceries":
         return "bg-emerald-100 text-emerald-900 border-emerald-200";
+      case "bills & utilities":
       case "utilities":
         return "bg-orange-100 text-orange-900 border-orange-200";
       case "salary & income":
+      case "income":
         return "bg-[#F5D547] text-[#1A1A1A] border-[#e2c130]";
       case "entertainment":
         return "bg-pink-100 text-pink-900 border-pink-200";
@@ -71,7 +76,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
             </h3>
           </div>
           <p className="text-xs text-black/50 mt-0.5">
-            Real Supabase PostgreSQL Database • Click any row to inspect details
+            Real Supabase PostgreSQL Database • Click any row to inspect & edit category or payment
           </p>
         </div>
 
@@ -130,7 +135,18 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCategoryColor(tx.category)}`}>
+                      <span
+                        onClick={(e) => {
+                          if (onEditTransaction) {
+                            e.stopPropagation();
+                            onEditTransaction(tx);
+                          }
+                        }}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCategoryColor(
+                          tx.category
+                        )}`}
+                        title="Click to edit category"
+                      >
                         {tx.category}
                       </span>
                       <span className="text-[11px] text-black/50 truncate">
@@ -154,12 +170,25 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => copyText(tx.referenceNo, e)}
-                      className="flex items-center gap-1 font-mono text-[10px] text-black/60 bg-black/5 px-2 py-0.5 rounded-md active:bg-black/10 shrink-0"
+                      className="flex items-center gap-1 font-mono text-[10px] text-black/60 bg-black/5 px-2 py-0.5 rounded-md active:bg-black/10 shrink-0 cursor-pointer"
                       title="Copy UTR"
                     >
                       <span>UTR: {tx.referenceNo.slice(-6)}</span>
                       {copiedId === tx.referenceNo ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5 opacity-50" />}
                     </button>
+                    {onEditTransaction && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditTransaction(tx);
+                        }}
+                        className="flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                        title="Edit category or payment"
+                      >
+                        <Edit3 className="w-2.5 h-2.5 text-amber-600" />
+                        <span>Edit</span>
+                      </button>
+                    )}
                     <ExternalLink className="w-3 h-3 text-black/30" />
                   </div>
                 </div>
@@ -169,7 +198,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
         )}
       </div>
 
-      {/* Desktop 10-Column Transactions Table (hidden on mobile, visible on md+) */}
+      {/* Desktop 10-Column Transactions Table */}
       <div className="hidden md:block overflow-x-auto mt-4 -mx-5 sm:mx-0">
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
@@ -183,7 +212,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
               <th className="py-2.5 px-3">Source / Method (Col 10)</th>
               <th className="py-2.5 px-3">Bank Notification (Col 7)</th>
               <th className="py-2.5 px-3">Message ID (Col 8)</th>
-              <th className="py-2.5 px-3 text-right">Inspect</th>
+              <th className="py-2.5 px-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-black/5 text-xs">
@@ -255,13 +284,21 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
 
                     {/* Col 4: Category */}
                     <td className="py-3 px-3 whitespace-nowrap">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getCategoryColor(
+                      <button
+                        onClick={(e) => {
+                          if (onEditTransaction) {
+                            e.stopPropagation();
+                            onEditTransaction(tx);
+                          }
+                        }}
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border hover:scale-105 transition-transform cursor-pointer flex items-center gap-1 ${getCategoryColor(
                           tx.category
                         )}`}
+                        title="Click to edit category"
                       >
-                        {tx.category}
-                      </span>
+                        <span>{tx.category}</span>
+                        <Edit3 className="w-2.5 h-2.5 opacity-50 hover:opacity-100" />
+                      </button>
                     </td>
 
                     {/* Col 9: Type */}
@@ -311,7 +348,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                     <td className="py-3 px-3 whitespace-nowrap">
                       <button
                         onClick={(e) => copyText(tx.messageId, e)}
-                        className="font-mono text-[10px] text-black/40 hover:text-black flex items-center gap-1"
+                        className="font-mono text-[10px] text-black/40 hover:text-black flex items-center gap-1 cursor-pointer"
                         title="Click to copy Gmail message ID"
                       >
                         <span>{tx.messageId.slice(0, 10)}...</span>
@@ -323,15 +360,29 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                       </button>
                     </td>
 
-                    {/* Inspect button */}
+                    {/* Actions: Edit & Inspect */}
                     <td className="py-3 px-3 text-right">
-                      <button
-                        onClick={() => onSelectTransaction(tx)}
-                        className="text-black/30 group-hover:text-black p-1 rounded-md hover:bg-black/5"
-                        title="Inspect Bank Alert & Gemini extraction"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {onEditTransaction && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditTransaction(tx);
+                            }}
+                            className="text-amber-800/70 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 p-1.5 rounded-lg transition-colors cursor-pointer"
+                            title="Edit Category or Payment"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onSelectTransaction(tx)}
+                          className="text-black/30 group-hover:text-black p-1.5 rounded-lg hover:bg-black/5 transition-colors cursor-pointer"
+                          title="Inspect Details"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTransactions, saveTransaction } from "@/lib/db";
+import { getTransactions, saveTransaction, updateTransaction, deleteTransaction } from "@/lib/db";
 import { BankTransaction } from "@/types/bankTransaction";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +77,70 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to save transaction" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Transaction ID is required to update" },
+        { status: 400 }
+      );
+    }
+
+    const updated = await updateTransaction(id, updates);
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, error: "Failed to update transaction in Supabase" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Transaction updated successfully",
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to update transaction" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Transaction ID is required to delete" },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await deleteTransaction(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { success: false, error: "Failed to delete transaction from Supabase" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Transaction deleted successfully",
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to delete transaction" },
       { status: 500 }
     );
   }
