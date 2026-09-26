@@ -1,19 +1,23 @@
 "use client";
 
 import React from "react";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, TrendingDown, Database } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, TrendingDown, Database, Plus } from "lucide-react";
 import { ExpenseSummary, TimeframeFilter } from "@/types/bankTransaction";
 
 interface BankKpiCardsProps {
   summary: ExpenseSummary;
   timeframe: TimeframeFilter;
   customRangeLabel?: string;
+  onAddCredit?: () => void;
+  onAddDebit?: () => void;
 }
 
 export const BankKpiCards: React.FC<BankKpiCardsProps> = ({
   summary,
   timeframe,
   customRangeLabel,
+  onAddCredit,
+  onAddDebit,
 }) => {
   const getTimeframeLabel = () => {
     switch (timeframe) {
@@ -40,8 +44,24 @@ export const BankKpiCards: React.FC<BankKpiCardsProps> = ({
           <span className="text-[11px] sm:text-xs font-semibold text-black/50 truncate">
             Total Spent
           </span>
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-            <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <div className="flex items-center gap-1.5">
+            {onAddDebit && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddDebit();
+                }}
+                title="Manually Add Expense"
+                className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="w-2.5 h-2.5" />
+                <span>Add</span>
+              </button>
+            )}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+              <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
         </div>
 
@@ -65,8 +85,24 @@ export const BankKpiCards: React.FC<BankKpiCardsProps> = ({
           <span className="text-[11px] sm:text-xs font-semibold text-black/50 truncate">
             Total Received
           </span>
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <div className="flex items-center gap-1.5">
+            {onAddCredit && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddCredit();
+                }}
+                title="Manually Add Received Amount"
+                className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="w-2.5 h-2.5" />
+                <span>Add</span>
+              </button>
+            )}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
         </div>
 

@@ -26,6 +26,7 @@ export const AutomaticBankDashboard: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isScriptModalOpen, setIsScriptModalOpen] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [addModalType, setAddModalType] = useState<"Credit" | "Debit">("Debit");
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
 
   // Fetch real transactions from Supabase API
@@ -231,31 +232,42 @@ export const AutomaticBankDashboard: React.FC = () => {
 
   // Add new transaction (persists directly to Supabase PostgreSQL)
   const handleAddManual = async (newTxItem: TransactionItem) => {
+    const isCredit = newTxItem.type === "credit";
+    const typeFormatted = isCredit ? "Credit" : "Debit";
+    const txDate = newTxItem.date || new Date().toISOString().slice(0, 10);
+    const timeStr = newTxItem.time ? ` ${newTxItem.time}` : "";
+
     const newBankTx: BankTransaction = {
       id: `tx-${Date.now()}`,
-      date: `${new Date().toISOString().slice(0, 10)} ${newTxItem.time}`,
+      date: `${txDate}${timeStr}`.trim(),
       payee: newTxItem.merchant,
       amount: newTxItem.amount,
       category: newTxItem.category,
-      referenceNo: newTxItem.upiId || `UPI/${Date.now().toString().slice(-8)}`,
-      notes: newTxItem.notes || "Manually recorded via Spendly",
-      bankNotification: `Alert: ₹${newTxItem.amount} debited via ${newTxItem.upiApp} to ${newTxItem.merchant}.`,
-      messageId: `manual_${Date.now()}`,
-      type: "Debit",
-      source: `${newTxItem.upiApp} UPI`,
-      aiParsed: true,
-      aiModel: "Gemini 1.5 Flash",
+      referenceNo: newTxItem.upiId || `MANUAL-${Date.now().toString().slice(-8)}`,
+      notes: newTxItem.notes || (isCredit ? "Manually credited amount" : "Manually recorded expense"),
+      bankNotification: isCredit
+        ? `Manual Credit: ₹${newTxItem.amount} received via ${newTxItem.upiApp} from ${newTxItem.merchant}.`
+        : `Manual Debit: ₹${newTxItem.amount} debited via ${newTxItem.upiApp} to ${newTxItem.merchant}.`,
+      messageId: `manual_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      type: typeFormatted,
+      source: `${newTxItem.upiApp} (Manual)`,
+      aiParsed: false,
+      aiModel: "Manual Entry",
     };
 
     // Optimistic UI update
     setTransactions((prev) => [newBankTx, ...prev]);
 
     try {
-      await fetch("/api/transactions", {
+      const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newBankTx),
       });
+      if (res.ok) {
+        // Re-sync with Supabase
+        loadTransactions();
+      }
     } catch (e) {
       console.error("Error saving transaction to Supabase:", e);
     }
@@ -286,7 +298,10 @@ export const AutomaticBankDashboard: React.FC = () => {
           setActiveTab(tab);
           if (tab === "Reports") handleExportCsv();
         }}
-        onOpenAddModal={() => setIsAddModalOpen(true)}
+        onOpenAddModal={() => {
+          setAddModalType("Debit");
+          setIsAddModalOpen(true);
+        }}
         onLogout={handleLogout}
         userName={currentUser?.name || "Shreyas Hathiwala"}
       />
@@ -301,7 +316,7 @@ export const AutomaticBankDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Dynamic KPI Cards: Spent, Received, Net Balance, AI Parsed */}
+      {/* Dynamic KPI Cards: Spent, Received, Net Balance, Total Records */}
       <div className="mb-5">
         <BankKpiCards
           summary={summary}
@@ -311,6 +326,14 @@ export const AutomaticBankDashboard: React.FC = () => {
               ? `${filters.customStartDate} to ${filters.customEndDate}`
               : undefined
           }
+          onAddCredit={() => {
+            setAddModalType("Credit");
+            setIsAddModalOpen(true);
+          }}
+          onAddDebit={() => {
+            setAddModalType("Debit");
+            setIsAddModalOpen(true);
+          }}
         />
       </div>
 
@@ -368,11 +391,12 @@ export const AutomaticBankDashboard: React.FC = () => {
         onClose={() => setIsScriptModalOpen(false)}
       />
 
-      {/* Quick Add Manual Expense Modal */}
+      {/* Quick Add Manual Expense / Income Modal */}
       <AddTransactionModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddTransaction={handleAddManual}
+        initialType={addModalType}
       />
     </div>
   );
