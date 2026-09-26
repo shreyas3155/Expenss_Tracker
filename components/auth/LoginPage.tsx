@@ -59,16 +59,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F6F3EB] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen w-full bg-[#F6F3EB] flex items-center justify-center p-3.5 sm:p-6 relative overflow-hidden font-sans">
       {/* Soft warm ambient glows */}
-      <div className="pointer-events-none absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#F5D547]/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-36 -left-36 w-[450px] h-[450px] rounded-full bg-[#F5D547]/15 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -right-32 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full bg-[#F5D547]/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-36 -left-36 w-[320px] sm:w-[450px] h-[320px] sm:h-[450px] rounded-full bg-[#F5D547]/15 blur-3xl" />
 
       {/* Main Login Card */}
-      <div className="w-full max-w-[440px] bg-white/90 backdrop-blur-md rounded-[32px] p-7 sm:p-9 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.07)] border border-black/5 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-md rounded-[28px] sm:rounded-[32px] p-5 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] border border-black/5 relative z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Brand Pill */}
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-2 bg-[#F6F3EB] px-4 py-1.5 rounded-full border border-black/5 shadow-2xs">
+        <div className="flex justify-center mb-5 sm:mb-6">
+          <div className="flex items-center gap-2 bg-[#F6F3EB] px-3.5 sm:px-4 py-1.5 rounded-full border border-black/5 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-[#F5D547]" />
             <span className="font-bold text-sm text-[#1A1A1A]">Spendly</span>
             <span className="text-[10px] uppercase font-semibold text-black/40">Secure Access</span>
@@ -76,71 +76,75 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Header Icon + Greeting */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#1A1A1A] text-white mx-auto flex items-center justify-center mb-3 shadow-md relative group">
-            <Lock className="w-6 h-6 text-[#F5D547]" />
+        <div className="text-center mb-5 sm:mb-6">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#1A1A1A] text-white mx-auto flex items-center justify-center mb-3 shadow-md relative group">
+            <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-[#F5D547]" />
             <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#F5D547] text-[#1A1A1A] flex items-center justify-center text-[10px] font-bold">
               ✓
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-[26px] font-extrabold text-[#1A1A1A] tracking-tight">
-            Welcome, Shreyas Hathiwala
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A] tracking-tight">
+            Welcome, Shreyas
           </h1>
-          <p className="text-xs text-black/50 mt-1 font-medium">
-            Enter your master password to access your automated Gemini AI bank expense dashboard.
+          <p className="text-xs text-black/50 mt-1 font-medium leading-relaxed px-2">
+            Enter your master password to access your Gemini AI bank expense dashboard.
           </p>
         </div>
 
         {/* Error Notification */}
         {error && (
-          <div className="mb-5 p-3 rounded-2xl bg-red-50 border border-red-200/60 text-xs font-semibold text-red-700 animate-in fade-in duration-150">
-            {error}
+          <div className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200/60 text-xs font-semibold text-red-700 animate-in fade-in duration-150 flex items-start gap-2">
+            <span className="text-red-500 font-bold shrink-0">!</span>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
           {/* Username Field */}
           <div>
-            <label className="block text-xs font-bold text-[#1A1A1A] mb-1.5 ml-1">
+            <label className="block text-xs font-bold text-[#1A1A1A] mb-1 ml-1">
               Authorized User
             </label>
-            <div className="relative flex items-center bg-[#F6F3EB]/70 border border-black/10 focus-within:border-black rounded-2xl px-4 py-3 transition-colors">
-              <User className="w-4 h-4 text-black/50 shrink-0 mr-3" />
+            <div className="relative flex items-center bg-[#F6F3EB]/80 border border-black/10 focus-within:border-black rounded-2xl px-3.5 py-3 transition-colors">
+              <User className="w-4 h-4 text-black/50 shrink-0 mr-2.5" />
               <input
                 type="text"
                 required
+                autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="shreyas hathiwala"
-                className="bg-transparent text-xs font-semibold text-[#1A1A1A] outline-hidden w-full placeholder-black/40"
+                className="bg-transparent text-sm sm:text-xs font-semibold text-[#1A1A1A] outline-hidden w-full placeholder-black/40"
               />
             </div>
           </div>
 
           {/* Password Field */}
           <div>
-            <div className="flex items-center justify-between mb-1.5 ml-1">
+            <div className="flex items-center justify-between mb-1 ml-1">
               <label className="block text-xs font-bold text-[#1A1A1A]">
                 Master Password
               </label>
             </div>
-            <div className="relative flex items-center bg-[#F6F3EB]/70 border border-black/10 focus-within:border-black rounded-2xl px-4 py-3 transition-colors">
-              <Lock className="w-4 h-4 text-black/50 shrink-0 mr-3" />
+            <div className="relative flex items-center bg-[#F6F3EB]/80 border border-black/10 focus-within:border-black rounded-2xl px-3.5 py-3 transition-colors">
+              <Lock className="w-4 h-4 text-black/50 shrink-0 mr-2.5" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="bg-transparent text-xs font-semibold text-[#1A1A1A] outline-hidden w-full placeholder-black/40"
+                className="bg-transparent text-sm sm:text-xs font-semibold text-[#1A1A1A] outline-hidden w-full placeholder-black/40"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-black/40 hover:text-black p-1 transition-colors cursor-pointer"
+                className="text-black/40 hover:text-black w-8 h-8 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -155,7 +159,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-2 bg-[#1A1A1A] hover:bg-black active:scale-[0.98] text-white font-bold text-xs py-3.5 px-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full mt-2 bg-[#1A1A1A] hover:bg-black active:scale-[0.98] text-white font-bold text-xs sm:text-sm py-3.5 px-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[46px]"
           >
             {isLoading ? (
               <span>Verifying credentials...</span>
@@ -169,7 +173,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </form>
 
         {/* Security Footer */}
-        <div className="mt-6 pt-4 border-t border-black/5 flex items-center justify-center gap-1.5 text-[11px] text-black/40">
+        <div className="mt-5 pt-3.5 border-t border-black/5 flex items-center justify-center gap-1.5 text-[11px] text-black/40">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Single-user private encryption active</span>
         </div>

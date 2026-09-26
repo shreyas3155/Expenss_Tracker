@@ -274,10 +274,10 @@ export const AutomaticBankDashboard: React.FC = () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#F6F3EB] p-4 sm:p-6 lg:p-8 relative overflow-x-hidden flex flex-col font-sans">
+    <div className="w-full min-h-screen bg-[#F6F3EB] p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 relative overflow-x-hidden flex flex-col font-sans">
       {/* Soft warm ambient glows */}
-      <div className="pointer-events-none absolute -top-32 -right-32 w-[550px] h-[550px] rounded-full bg-[#F5D547]/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full bg-[#F5D547]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -right-32 w-[350px] sm:w-[550px] h-[350px] sm:h-[550px] rounded-full bg-[#F5D547]/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-40 w-[300px] sm:w-[480px] h-[300px] sm:h-[480px] rounded-full bg-[#F5D547]/10 blur-3xl" />
 
       {/* Top Floating Pill Navigation Bar */}
       <TopNavbar

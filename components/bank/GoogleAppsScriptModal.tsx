@@ -142,9 +142,9 @@ function sendToVercelWebhook(transaction) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-6 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="w-full max-w-3xl max-h-[92vh] bg-[#F6F3EB] rounded-[32px] p-6 shadow-2xl border border-black/10 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-3xl max-h-[94vh] sm:max-h-[92vh] bg-[#F6F3EB] rounded-[24px] sm:rounded-[32px] p-4 sm:p-6 shadow-2xl border border-black/10 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

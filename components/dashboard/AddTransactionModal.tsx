@@ -116,7 +116,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               value={merchant}
               onChange={(e) => setMerchant(e.target.value)}
               required
-              className="w-full px-4 py-2.5 bg-white rounded-2xl border border-black/10 focus:border-black focus:outline-hidden text-xs font-medium text-[#1A1A1A]"
+              className="w-full px-4 py-2.5 bg-white rounded-2xl border border-black/10 focus:border-black focus:outline-hidden text-sm sm:text-xs font-medium text-[#1A1A1A]"
             />
           </div>
 
