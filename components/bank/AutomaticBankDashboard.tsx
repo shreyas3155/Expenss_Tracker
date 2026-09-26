@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { BankTransaction, FilterState, ExpenseSummary, TimeframeFilter } from "@/types/bankTransaction";
-import { initialBankTransactions } from "@/data/bankTransactionsMock";
 import { TopNavbar } from "../dashboard/TopNavbar";
 import { GeminiSyncBadge } from "./GeminiSyncBadge";
 import { BankKpiCards } from "./BankKpiCards";
@@ -20,12 +19,33 @@ export const AutomaticBankDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null);
 
-  const [transactions, setTransactions] = useState<BankTransaction[]>(initialBankTransactions);
+  // Real data state from Supabase (starts empty, NO fake data)
+  const [transactions, setTransactions] = useState<BankTransaction[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("Dashboard");
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isScriptModalOpen, setIsScriptModalOpen] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
+
+  // Fetch real transactions from Supabase API
+  const loadTransactions = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/transactions");
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(Array.isArray(data.transactions) ? data.transactions : []);
+      } else {
+        setTransactions([]);
+      }
+    } catch (e) {
+      console.error("Failed to load real transactions from Supabase:", e);
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Check login session on mount
   useEffect(() => {
@@ -54,6 +74,13 @@ export const AutomaticBankDashboard: React.FC = () => {
     checkSession();
   }, []);
 
+  // Fetch real transactions when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadTransactions();
+    }
+  }, [isAuthenticated, loadTransactions]);
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -63,9 +90,9 @@ export const AutomaticBankDashboard: React.FC = () => {
     setCurrentUser(null);
   };
 
-  // Filter state
+  // Filter state (Defaults to 'all' so any existing real transactions are visible immediately)
   const [filters, setFilters] = useState<FilterState>({
-    timeframe: "today", // Default to Today as requested!
+    timeframe: "all",
     type: "all",
     category: "all",
     source: "all",
@@ -101,25 +128,16 @@ export const AutomaticBankDashboard: React.FC = () => {
       const txDateStr = tx.date.slice(0, 10);
 
       if (filters.timeframe === "today") {
-        // Matches current date (or first 3 items in mock which are designated today)
-        if (tx.id.includes("today")) {
-          // match
-        } else if (txDateStr !== todayStr) {
-          return false;
-        }
+        if (txDateStr !== todayStr) return false;
       } else if (filters.timeframe === "week") {
-        if (!tx.id.includes("today") && !tx.id.includes("yesterday") && !tx.id.includes("week")) {
-          if (isNaN(txDate.getTime()) || txDate < weekAgo) return false;
-        }
+        if (isNaN(txDate.getTime()) || txDate < weekAgo) return false;
       } else if (filters.timeframe === "month") {
-        // All September / month items
-        if (!tx.id.includes("today") && !tx.id.includes("yesterday") && !tx.id.includes("week") && !tx.id.includes("month")) {
-          if (isNaN(txDate.getTime()) || txDate < monthStart) return false;
-        }
+        if (isNaN(txDate.getTime()) || txDate < monthStart) return false;
       } else if (filters.timeframe === "custom") {
         if (filters.customStartDate && txDateStr < filters.customStartDate) return false;
         if (filters.customEndDate && txDateStr > filters.customEndDate) return false;
       }
+      // "all" timeframe passes through without date restriction
 
       // 2. Type check (Debit / Credit)
       if (filters.type === "debit" && tx.type !== "Debit") return false;
@@ -177,18 +195,15 @@ export const AutomaticBankDashboard: React.FC = () => {
     };
   }, [filteredTransactions]);
 
-  // Handle manual sync simulation
+  // Handle manual sync simulation / re-fetch real transactions from Supabase
   const handleSyncMail = async () => {
     setIsSyncing(true);
     try {
-      // Fetch any newly received transactions from API route
-      const res = await fetch("/api/webhook");
-      const data = await res.json();
+      await loadTransactions();
+    } finally {
       setTimeout(() => {
         setIsSyncing(false);
-      }, 700);
-    } catch (e) {
-      setIsSyncing(false);
+      }, 600);
     }
   };
 
@@ -214,8 +229,8 @@ export const AutomaticBankDashboard: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Add new transaction
-  const handleAddManual = (newTxItem: TransactionItem) => {
+  // Add new transaction (persists directly to Supabase PostgreSQL)
+  const handleAddManual = async (newTxItem: TransactionItem) => {
     const newBankTx: BankTransaction = {
       id: `tx-${Date.now()}`,
       date: `${new Date().toISOString().slice(0, 10)} ${newTxItem.time}`,
@@ -232,7 +247,18 @@ export const AutomaticBankDashboard: React.FC = () => {
       aiModel: "Gemini 1.5 Flash",
     };
 
+    // Optimistic UI update
     setTransactions((prev) => [newBankTx, ...prev]);
+
+    try {
+      await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBankTx),
+      });
+    } catch (e) {
+      console.error("Error saving transaction to Supabase:", e);
+    }
   };
 
   // If not authenticated, render Login Page gatekeeper first
@@ -324,6 +350,7 @@ export const AutomaticBankDashboard: React.FC = () => {
               transactions={filteredTransactions}
               onSelectTransaction={(tx) => setSelectedTx(tx)}
               onExportCsv={handleExportCsv}
+              isLoading={isLoading}
             />
           </div>
         </section>

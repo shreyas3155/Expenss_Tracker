@@ -22,6 +22,7 @@ export const BankFilterBar: React.FC<BankFilterBarProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const timeframes: Array<{ id: TimeframeFilter; label: string }> = [
+    { id: "all", label: "All Time" },
     { id: "today", label: "Today" },
     { id: "week", label: "This Week" },
     { id: "month", label: "This Month" },

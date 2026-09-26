@@ -29,7 +29,7 @@ export interface BankTransaction {
   tags?: string[];
 }
 
-export type TimeframeFilter = "today" | "week" | "month" | "custom";
+export type TimeframeFilter = "all" | "today" | "week" | "month" | "custom";
 
 export interface FilterState {
   timeframe: TimeframeFilter;

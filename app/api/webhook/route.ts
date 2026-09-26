@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BankTransaction } from "@/types/bankTransaction";
+import { saveTransaction } from "@/lib/db";
 
-// In-memory fallback storage for server runtime (or connects to database / Google Sheets)
-// When deploying to Vercel, this accepts incoming POST requests from Google Apps Script!
-let memoryStore: BankTransaction[] = [];
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
       source,
     } = body;
 
-    if (!payee || !amount) {
+    if (!payee || amount === undefined || amount === null) {
       return NextResponse.json(
         { error: "Missing required fields: payee and amount are required" },
         { status: 400 }
@@ -46,14 +45,13 @@ export async function POST(req: NextRequest) {
       aiModel: "Gemini AI",
     };
 
-    memoryStore.unshift(newTx);
+    await saveTransaction(newTx);
 
     return NextResponse.json(
       {
         success: true,
-        message: "Transaction recorded successfully from Google Apps Script",
+        message: "Transaction recorded in Supabase PostgreSQL successfully from Google Apps Script",
         transaction: newTx,
-        totalStored: memoryStore.length,
       },
       { status: 201 }
     );

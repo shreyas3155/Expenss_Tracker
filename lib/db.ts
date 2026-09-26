@@ -1,10 +1,9 @@
 import { prisma } from "./prisma";
 import { BankTransaction } from "@/types/bankTransaction";
-import { initialBankTransactions } from "@/data/bankTransactionsMock";
 
 /**
- * Fetch all transactions from PostgreSQL via Prisma
- * Falls back to initial data if database is not reachable yet
+ * Fetch all transactions from Supabase PostgreSQL via Prisma
+ * Returns empty array if no transactions exist in the database.
  */
 export async function getTransactions(): Promise<BankTransaction[]> {
   try {
@@ -13,7 +12,7 @@ export async function getTransactions(): Promise<BankTransaction[]> {
     });
 
     if (!dbTransactions || dbTransactions.length === 0) {
-      return initialBankTransactions;
+      return [];
     }
 
     return dbTransactions.map((tx) => ({
@@ -32,8 +31,8 @@ export async function getTransactions(): Promise<BankTransaction[]> {
       aiModel: tx.aiModel || "Gemini 1.5 Flash",
     }));
   } catch (error) {
-    console.warn("PostgreSQL not connected yet, using in-memory mock data:", error);
-    return initialBankTransactions;
+    console.error("Error fetching transactions from Supabase PostgreSQL:", error);
+    return [];
   }
 }
 
@@ -94,31 +93,8 @@ export async function seedInitialUserAndData() {
       },
     });
 
-    // 2. Upsert initial bank transactions
-    for (const item of initialBankTransactions) {
-      await prisma.transaction.upsert({
-        where: { messageId: item.messageId },
-        update: {},
-        create: {
-          id: item.id,
-          date: item.date,
-          payee: item.payee,
-          amount: item.amount,
-          category: item.category,
-          referenceNo: item.referenceNo,
-          notes: item.notes,
-          bankNotification: item.bankNotification,
-          messageId: item.messageId,
-          type: item.type,
-          source: item.source,
-          aiParsed: true,
-          aiModel: "Gemini 1.5 Flash",
-        },
-      });
-    }
-
-    console.log("PostgreSQL seeded successfully with Shreyas Hathiwala and bank data");
+    console.log("PostgreSQL seed check completed (user configured)");
   } catch (err) {
-    console.warn("PostgreSQL seed skipped (waiting for active DB connection):", err);
+    console.warn("PostgreSQL seed skipped:", err);
   }
 }

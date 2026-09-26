@@ -20,6 +20,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   transactions Transaction[]
+
+  @@map("users")
 }
 
 model Transaction {
@@ -59,4 +61,5 @@ model Transaction {
   @@index([category])
   @@index([type])
   @@index([referenceNo])
+  @@map("transactions")
 }

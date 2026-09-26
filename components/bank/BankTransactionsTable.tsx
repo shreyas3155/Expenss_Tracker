@@ -20,12 +20,14 @@ interface BankTransactionsTableProps {
   transactions: BankTransaction[];
   onSelectTransaction: (tx: BankTransaction) => void;
   onExportCsv: () => void;
+  isLoading?: boolean;
 }
 
 export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
   transactions,
   onSelectTransaction,
   onExportCsv,
+  isLoading = false,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -69,13 +71,14 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
             </h3>
           </div>
           <p className="text-xs text-black/50 mt-0.5">
-            Matching your Excel schema • Click any row to inspect raw bank email and AI parser reasoning
+            Real Supabase PostgreSQL Database • Click any row to inspect details
           </p>
         </div>
 
         <button
           onClick={onExportCsv}
-          className="bg-white hover:bg-black/5 border border-black/10 text-[#1A1A1A] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+          disabled={transactions.length === 0}
+          className="bg-white hover:bg-black/5 border border-black/10 text-[#1A1A1A] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export 10-Col Excel/CSV</span>
@@ -100,10 +103,29 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-black/5 text-xs">
-            {transactions.length === 0 ? (
+            {isLoading ? (
               <tr>
-                <td colSpan={10} className="text-center py-12 text-black/40">
-                  No bank transactions found matching the selected timeframe or filter.
+                <td colSpan={10} className="text-center py-16 text-black/50">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-6 h-6 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-medium text-black/60">
+                      Loading real data from Supabase...
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="text-center py-16 text-black/50">
+                  <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                    <div className="w-12 h-12 rounded-2xl bg-black/5 flex items-center justify-center text-black/40 mb-1">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                    <p className="font-bold text-[#1A1A1A] text-sm">No transactions found</p>
+                    <p className="text-xs text-black/50 text-center leading-relaxed">
+                      Your Supabase database currently has 0 transactions. Once bank alerts are synced via Google Apps Script or added manually, they will appear here in real-time.
+                    </p>
+                  </div>
                 </td>
               </tr>
             ) : (

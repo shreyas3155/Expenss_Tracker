@@ -17,6 +17,8 @@ export const BankKpiCards: React.FC<BankKpiCardsProps> = ({
 }) => {
   const getTimeframeLabel = () => {
     switch (timeframe) {
+      case "all":
+        return "All Time";
       case "today":
         return "Today";
       case "week":
