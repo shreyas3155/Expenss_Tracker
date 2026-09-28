@@ -13,6 +13,7 @@ import { GoogleAppsScriptModal } from "./GoogleAppsScriptModal";
 import { AddTransactionModal } from "../dashboard/AddTransactionModal";
 import { LoginPage } from "../auth/LoginPage";
 import { TransactionItem } from "@/types/dashboard";
+import { CategorySpendingAnalytics } from "./CategorySpendingAnalytics";
 
 export const AutomaticBankDashboard: React.FC = () => {
   // Authentication gatekeeper for Shreyas Hathiwala
@@ -303,7 +304,7 @@ export const AutomaticBankDashboard: React.FC = () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#F6F3EB] p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 relative overflow-x-hidden flex flex-col font-sans">
+    <div className="w-full min-h-screen bg-[#F6F3EB] p-3 sm:p-6 lg:p-8 pb-36 sm:pb-28 md:pb-8 relative overflow-x-clip flex flex-col font-sans touch-pan-y">
       {/* Soft warm ambient glows */}
       <div className="pointer-events-none absolute -top-32 -right-32 w-[350px] sm:w-[550px] h-[350px] sm:h-[550px] rounded-full bg-[#F5D547]/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 -left-40 w-[300px] sm:w-[480px] h-[300px] sm:h-[480px] rounded-full bg-[#F5D547]/10 blur-3xl" />
@@ -323,85 +324,132 @@ export const AutomaticBankDashboard: React.FC = () => {
         userName={currentUser?.name || "Shreyas Hathiwala"}
       />
 
-      {/* Gemini AI & Google Apps Script Live Sync Status Badge */}
-      <div className="mb-5">
-        <GeminiSyncBadge
-          onSync={handleSyncMail}
-          onOpenScriptModal={() => setIsScriptModalOpen(true)}
-          isSyncing={isSyncing}
-          totalParsedCount={transactions.length}
-        />
-      </div>
+      {/* Tab View 1: Category Spending Breakdown & Charts */}
+      {activeTab === "Categories" || activeTab === "Analytics" || activeTab === "Insights" ? (
+        <main className="flex-1">
+          <CategorySpendingAnalytics
+            transactions={transactions}
+            onEditTransaction={(tx) => {
+              setSelectedTx(tx);
+              setInspectorMode("edit");
+            }}
+            onSelectTransaction={(tx) => {
+              setSelectedTx(tx);
+              setInspectorMode("view");
+            }}
+            isLoading={isLoading}
+          />
+        </main>
+      ) : activeTab === "Transactions" ? (
+        /* Tab View 2: Focused 10-Column Transaction Ledger */
+        <main className="space-y-5 flex-1">
+          {/* Interactive Filter Bar */}
+          <BankFilterBar
+            filters={filters}
+            onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
+            categories={categories}
+            sources={sources}
+            totalResults={filteredTransactions.length}
+          />
+          {/* Full-width 10-Column Bank Email & Gemini AI Ledger Table */}
+          <BankTransactionsTable
+            transactions={filteredTransactions}
+            onSelectTransaction={(tx) => {
+              setSelectedTx(tx);
+              setInspectorMode("view");
+            }}
+            onEditTransaction={(tx) => {
+              setSelectedTx(tx);
+              setInspectorMode("edit");
+            }}
+            onExportCsv={handleExportCsv}
+            isLoading={isLoading}
+          />
+        </main>
+      ) : (
+        /* Tab View 3: Default Overview Dashboard with KPIs, Trend, and Recent Ledger */
+        <>
+          {/* Gemini AI & Google Apps Script Live Sync Status Badge */}
+          <div className="mb-5">
+            <GeminiSyncBadge
+              onSync={handleSyncMail}
+              onOpenScriptModal={() => setIsScriptModalOpen(true)}
+              isSyncing={isSyncing}
+              totalParsedCount={transactions.length}
+            />
+          </div>
 
-      {/* Dynamic KPI Cards: Spent, Received, Net Balance, Total Records */}
-      <div className="mb-5">
-        <BankKpiCards
-          summary={summary}
-          timeframe={filters.timeframe}
-          customRangeLabel={
-            filters.customStartDate && filters.customEndDate
-              ? `${filters.customStartDate} to ${filters.customEndDate}`
-              : undefined
-          }
-          onAddCredit={() => {
-            setAddModalType("Credit");
-            setIsAddModalOpen(true);
-          }}
-          onAddDebit={() => {
-            setAddModalType("Debit");
-            setIsAddModalOpen(true);
-          }}
-        />
-      </div>
-
-      {/* Interactive Filter Bar: Today / Week / Month / Custom Date / Debits / Credits / Search */}
-      <div className="mb-5">
-        <BankFilterBar
-          filters={filters}
-          onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-          categories={categories}
-          sources={sources}
-          totalResults={filteredTransactions.length}
-        />
-      </div>
-
-      {/* Main Content Grid: Trend Chart & 10-Column Transaction Ledger */}
-      <main className="space-y-5 flex-1">
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* Left Column (4 cols): Cash Flow Trend Chart for the period */}
-          <div className="lg:col-span-4">
-            <BankSpendTrendChart
-              transactions={filteredTransactions}
-              timeframeLabel={
-                filters.timeframe === "today"
-                  ? "Today"
-                  : filters.timeframe === "week"
-                  ? "This Week"
-                  : filters.timeframe === "month"
-                  ? "This Month"
-                  : "Custom Period"
+          {/* Dynamic KPI Cards: Spent, Received, Net Balance, Total Records */}
+          <div className="mb-5">
+            <BankKpiCards
+              summary={summary}
+              timeframe={filters.timeframe}
+              customRangeLabel={
+                filters.customStartDate && filters.customEndDate
+                  ? `${filters.customStartDate} to ${filters.customEndDate}`
+                  : undefined
               }
+              onAddCredit={() => {
+                setAddModalType("Credit");
+                setIsAddModalOpen(true);
+              }}
+              onAddDebit={() => {
+                setAddModalType("Debit");
+                setIsAddModalOpen(true);
+              }}
             />
           </div>
 
-          {/* Right Column (8 cols): 10-Column Bank Email & Gemini AI Ledger Table */}
-          <div className="lg:col-span-8">
-            <BankTransactionsTable
-              transactions={filteredTransactions}
-              onSelectTransaction={(tx) => {
-                setSelectedTx(tx);
-                setInspectorMode("view");
-              }}
-              onEditTransaction={(tx) => {
-                setSelectedTx(tx);
-                setInspectorMode("edit");
-              }}
-              onExportCsv={handleExportCsv}
-              isLoading={isLoading}
+          {/* Interactive Filter Bar: Today / Week / Month / Custom Date / Debits / Credits / Search */}
+          <div className="mb-5">
+            <BankFilterBar
+              filters={filters}
+              onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
+              categories={categories}
+              sources={sources}
+              totalResults={filteredTransactions.length}
             />
           </div>
-        </section>
-      </main>
+
+          {/* Main Content Grid: Trend Chart & 10-Column Transaction Ledger */}
+          <main className="space-y-5 flex-1">
+            <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+              {/* Left Column (4 cols): Cash Flow Trend Chart for the period */}
+              <div className="lg:col-span-4">
+                <BankSpendTrendChart
+                  transactions={filteredTransactions}
+                  timeframeLabel={
+                    filters.timeframe === "today"
+                      ? "Today"
+                      : filters.timeframe === "week"
+                      ? "This Week"
+                      : filters.timeframe === "month"
+                      ? "This Month"
+                      : "Custom Period"
+                  }
+                />
+              </div>
+
+              {/* Right Column (8 cols): 10-Column Bank Email & Gemini AI Ledger Table */}
+              <div className="lg:col-span-8">
+                <BankTransactionsTable
+                  transactions={filteredTransactions}
+                  onSelectTransaction={(tx) => {
+                    setSelectedTx(tx);
+                    setInspectorMode("view");
+                  }}
+                  onEditTransaction={(tx) => {
+                    setSelectedTx(tx);
+                    setInspectorMode("edit");
+                  }}
+                  onExportCsv={handleExportCsv}
+                  isLoading={isLoading}
+                />
+              </div>
+            </section>
+          </main>
+        </>
+      )}
 
       {/* Raw Bank Email & AI Parser Inspection Modal with Edit & Delete */}
       <TransactionInspectorModal

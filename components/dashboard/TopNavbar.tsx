@@ -11,6 +11,7 @@ import {
   Receipt,
   FileSpreadsheet,
   LogOut,
+  PieChart,
 } from "lucide-react";
 
 interface TopNavbarProps {
@@ -24,10 +25,8 @@ interface TopNavbarProps {
 
 export const NAV_TABS = [
   { id: "Dashboard", label: "Dashboard" },
-  { id: "Transactions", label: "Transactions" },
-  { id: "Categories", label: "Categories" },
-  { id: "Budgets", label: "Budgets" },
-  { id: "Insights", label: "Insights" },
+  { id: "Categories", label: "Charts & Categories" },
+  { id: "Transactions", label: "Ledger Table" },
   { id: "Reports", label: "Reports" },
 ];
 
@@ -152,8 +151,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       >
         <button
           onClick={() => onTabChange("Dashboard")}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-full transition-colors cursor-pointer ${
-            activeTab === "Dashboard" ? "text-[#F5D547]" : "text-white/60 hover:text-white"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-full transition-colors cursor-pointer ${
+            activeTab === "Dashboard"
+              ? "text-[#F5D547]"
+              : "text-white/60 hover:text-white"
           }`}
         >
           <LayoutDashboard className="w-4 h-4" />
@@ -162,8 +163,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
         <button
           onClick={() => onTabChange("Transactions")}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-full transition-colors cursor-pointer ${
-            activeTab === "Transactions" ? "text-[#F5D547]" : "text-white/60 hover:text-white"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-full transition-colors cursor-pointer ${
+            activeTab === "Transactions"
+              ? "text-[#F5D547]"
+              : "text-white/60 hover:text-white"
           }`}
         >
           <Receipt className="w-4 h-4" />
@@ -173,7 +176,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         {/* Center Golden Add Button */}
         <button
           onClick={onOpenAddModal}
-          className="flex items-center justify-center w-11 h-11 rounded-full bg-[#F5D547] text-[#1A1A1A] shadow-lg active:scale-90 transition-transform -my-1 cursor-pointer"
+          className="flex items-center justify-center w-11 h-11 rounded-full bg-[#F5D547] text-[#1A1A1A] shadow-lg active:scale-90 transition-transform -my-1 cursor-pointer shrink-0"
           title="Add Expense"
           aria-label="Add Expense"
         >
@@ -181,25 +184,28 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </button>
 
         <button
+          onClick={() => onTabChange("Categories")}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-full transition-colors cursor-pointer ${
+            activeTab === "Categories" || activeTab === "Analytics"
+              ? "text-[#F5D547]"
+              : "text-white/60 hover:text-white"
+          }`}
+        >
+          <PieChart className="w-4 h-4" />
+          <span className="text-[10px] font-semibold">Charts</span>
+        </button>
+
+        <button
           onClick={() => onTabChange("Reports")}
-          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-full transition-colors cursor-pointer ${
-            activeTab === "Reports" ? "text-[#F5D547]" : "text-white/60 hover:text-white"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-full transition-colors cursor-pointer ${
+            activeTab === "Reports"
+              ? "text-[#F5D547]"
+              : "text-white/60 hover:text-white"
           }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
           <span className="text-[10px] font-semibold">Export</span>
         </button>
-
-        {onLogout && (
-          <button
-            onClick={onLogout}
-            className="flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-full text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-            title="Log Out"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="text-[10px] font-semibold">Exit</span>
-          </button>
-        )}
       </nav>
     </>
   );

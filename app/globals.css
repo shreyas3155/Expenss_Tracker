@@ -22,12 +22,20 @@
   --font-mono: var(--font-geist-mono), monospace;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  min-height: 100dvh;
 }
 
 /* Custom subtle hatched/striped pattern for metric track */
