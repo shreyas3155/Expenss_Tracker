@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BankTransaction } from "@/types/bankTransaction";
-import { saveTransaction } from "@/lib/db";
+import { saveTransaction, USER_ID } from "@/lib/db";
+import { getCategoryRules, findCategoryForPayee } from "@/lib/rules";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Automatically check user's custom payee category rules
+    let resolvedCategory = category;
+    if (!resolvedCategory || resolvedCategory === "Uncategorized" || resolvedCategory === "Other") {
+      try {
+        const rules = await getCategoryRules(USER_ID);
+        const match = findCategoryForPayee(String(payee), rules);
+        if (match) {
+          resolvedCategory = match.category;
+        }
+      } catch (e) {
+        console.warn("Failed checking category rules in webhook:", e);
+      }
+    }
+
     const newTx: BankTransaction = {
       id: messageId || `tx-${Date.now()}`,
       date: date || new Date().toISOString(),
       payee: String(payee),
       amount: Number(amount),
-      category: category || "Uncategorized",
+      category: resolvedCategory || "Uncategorized",
       referenceNo: referenceNo || `REF-${Date.now()}`,
       notes: notes || "Auto-parsed by Gemini AI via Google Apps Script",
       bankNotification: bankNotification || "",

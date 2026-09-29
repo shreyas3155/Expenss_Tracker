@@ -14,6 +14,7 @@ import { AddTransactionModal } from "../dashboard/AddTransactionModal";
 import { LoginPage } from "../auth/LoginPage";
 import { TransactionItem } from "@/types/dashboard";
 import { CategorySpendingAnalytics } from "./CategorySpendingAnalytics";
+import { CategoryRulesManager } from "./CategoryRulesManager";
 
 export const AutomaticBankDashboard: React.FC = () => {
   // Authentication gatekeeper for Shreyas Hathiwala
@@ -324,8 +325,16 @@ export const AutomaticBankDashboard: React.FC = () => {
         userName={currentUser?.name || "Shreyas Hathiwala"}
       />
 
-      {/* Tab View 1: Category Spending Breakdown & Charts */}
-      {activeTab === "Categories" || activeTab === "Analytics" || activeTab === "Insights" ? (
+      {/* Tab View 0: Dedicated Payee Category Rules Manager */}
+      {activeTab === "Rules" ? (
+        <main className="flex-1">
+          <CategoryRulesManager
+            onRulesUpdated={() => {
+              loadTransactions();
+            }}
+          />
+        </main>
+      ) : activeTab === "Categories" || activeTab === "Analytics" || activeTab === "Insights" ? (
         <main className="flex-1">
           <CategorySpendingAnalytics
             transactions={transactions}

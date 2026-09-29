@@ -25,6 +25,7 @@ interface TopNavbarProps {
 
 export const NAV_TABS = [
   { id: "Dashboard", label: "Dashboard" },
+  { id: "Rules", label: "Payee Rules" },
   { id: "Categories", label: "Charts & Categories" },
   { id: "Transactions", label: "Ledger Table" },
   { id: "Reports", label: "Reports" },
@@ -162,15 +163,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </button>
 
         <button
-          onClick={() => onTabChange("Transactions")}
+          onClick={() => onTabChange("Rules")}
           className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-full transition-colors cursor-pointer ${
-            activeTab === "Transactions"
+            activeTab === "Rules"
               ? "text-[#F5D547]"
               : "text-white/60 hover:text-white"
           }`}
         >
-          <Receipt className="w-4 h-4" />
-          <span className="text-[10px] font-semibold">Ledger</span>
+          <Sparkles className="w-4 h-4" />
+          <span className="text-[10px] font-semibold">Rules</span>
         </button>
 
         {/* Center Golden Add Button */}
@@ -181,6 +182,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           aria-label="Add Expense"
         >
           <Plus className="w-5 h-5 stroke-[2.5]" />
+        </button>
+
+        <button
+          onClick={() => onTabChange("Transactions")}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-full transition-colors cursor-pointer ${
+            activeTab === "Transactions"
+              ? "text-[#F5D547]"
+              : "text-white/60 hover:text-white"
+          }`}
+        >
+          <Receipt className="w-4 h-4" />
+          <span className="text-[10px] font-semibold">Ledger</span>
         </button>
 
         <button

@@ -56,6 +56,9 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [createRuleOnSave, setCreateRuleOnSave] = useState<boolean>(true);
+  const [ruleActionSuccess, setRuleActionSuccess] = useState<string | null>(null);
+  const [isCreatingRuleDirect, setIsCreatingRuleDirect] = useState<boolean>(false);
 
   // Editable Form State
   const [payee, setPayee] = useState<string>("");
@@ -80,6 +83,8 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
       setShowDeleteConfirm(false);
       setSaveSuccess(false);
       setErrorMessage(null);
+      setRuleActionSuccess(null);
+      setCreateRuleOnSave(true);
     }
   }, [transaction, initialMode]);
 
@@ -89,6 +94,35 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
     navigator.clipboard?.writeText(val);
     setCopiedField(fieldName);
     setTimeout(() => setCopiedField(null), 1500);
+  };
+
+  // Quick 1-click rule creator directly from view mode
+  const handleQuickCreateRule = async (targetCategory: string) => {
+    if (!transaction?.payee || !targetCategory) return;
+    setIsCreatingRuleDirect(true);
+    try {
+      const res = await fetch("/api/rules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_payee",
+          category: targetCategory,
+          payee: transaction.payee,
+          applyToPast: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRuleActionSuccess(
+          `Rule created! Always routing "${transaction.payee}" to "${targetCategory}" (${data.updatedPastTransactionsCount} past transactions updated)`
+        );
+        setTimeout(() => setRuleActionSuccess(null), 5000);
+      }
+    } catch (e: any) {
+      console.error("Quick create rule error:", e);
+    } finally {
+      setIsCreatingRuleDirect(false);
+    }
   };
 
   const handleSave = async (e?: React.FormEvent) => {
@@ -130,6 +164,20 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to update transaction");
+      }
+
+      // If user kept the rule checkbox active:
+      if (createRuleOnSave && finalPayee && finalCategory) {
+        fetch("/api/rules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "add_payee",
+            category: finalCategory,
+            payee: finalPayee,
+            applyToPast: true,
+          }),
+        }).catch((err) => console.warn("Failed persisting rule:", err));
       }
 
       if (onUpdateTransaction) {
@@ -219,44 +267,77 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
           </div>
         )}
 
+        {/* Rule Action Success Notification */}
+        {ruleActionSuccess && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl text-xs font-semibold my-2 flex items-center gap-1.5 animate-in fade-in">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>{ruleActionSuccess}</span>
+          </div>
+        )}
+
         {/* VIEW MODE HEADER */}
         {!isEditing ? (
-          <div className="flex flex-wrap items-baseline justify-between gap-2 mt-1 pb-4 border-b border-black/5">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A]">
-                {transaction.payee}
-              </h2>
-              <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-black/50">
-                  Source: <span className="font-semibold text-black">{transaction.source}</span>
-                </p>
-                <span className="text-black/20">•</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border border-black/10 text-black/70">
-                  {transaction.category}
+          <>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 mt-1 pb-4 border-b border-black/5">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A]">
+                  {transaction.payee}
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-black/50">
+                    Source: <span className="font-semibold text-black">{transaction.source}</span>
+                  </p>
+                  <span className="text-black/20">•</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border border-black/10 text-black/70">
+                    {transaction.category}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span
+                  className={`text-2xl sm:text-3xl font-extrabold tabular-nums tracking-tight ${
+                    isDebit ? "text-[#1A1A1A]" : "text-emerald-700"
+                  }`}
+                >
+                  {isDebit ? "-" : "+"}₹
+                  {transaction.amount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+                <span
+                  className={`block text-[11px] font-bold ${
+                    isDebit ? "text-red-600" : "text-emerald-700"
+                  }`}
+                >
+                  {transaction.type}
                 </span>
               </div>
             </div>
 
-            <div className="text-right">
-              <span
-                className={`text-2xl sm:text-3xl font-extrabold tabular-nums tracking-tight ${
-                  isDebit ? "text-[#1A1A1A]" : "text-emerald-700"
-                }`}
+            {/* Smart Category Rule Quick Trigger */}
+            <div className="bg-[#1A1A1A] text-white p-3 rounded-2xl flex items-center justify-between gap-3 shadow-xs my-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-[#F5D547]/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 text-[#F5D547]" />
+                </div>
+                <div className="text-xs">
+                  <span className="font-bold text-white block">Dedicated Routing Rule</span>
+                  <span className="text-white/60 text-[11px]">
+                    Always route future & past payments for &ldquo;{transaction.payee}&rdquo; to &ldquo;{transaction.category}&rdquo;?
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleQuickCreateRule(transaction.category)}
+                disabled={isCreatingRuleDirect}
+                className="bg-[#F5D547] hover:bg-[#ebd043] text-[#1A1A1A] font-bold text-xs px-3 py-1.5 rounded-full transition-all shrink-0 cursor-pointer disabled:opacity-50"
               >
-                {isDebit ? "-" : "+"}₹
-                {transaction.amount.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-              <span
-                className={`block text-[11px] font-bold ${
-                  isDebit ? "text-red-600" : "text-emerald-700"
-                }`}
-              >
-                {transaction.type}
-              </span>
+                {isCreatingRuleDirect ? "Saving..." : "⚡ Always Route Here"}
+              </button>
             </div>
-          </div>
+          </>
         ) : null}
 
         {/* SCROLLABLE BODY CONTENT */}
@@ -372,6 +453,24 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
                     autoFocus
                   />
                 )}
+
+                {/* Permanent Rule Checkbox */}
+                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 cursor-pointer select-none text-xs mt-2.5">
+                  <input
+                    type="checkbox"
+                    checked={createRuleOnSave}
+                    onChange={(e) => setCreateRuleOnSave(e.target.checked)}
+                    className="rounded text-black accent-[#1A1A1A] cursor-pointer"
+                  />
+                  <div className="text-[11px] leading-snug">
+                    <span className="font-bold text-amber-950 block">
+                      ⚡ Save as rule: Always route &ldquo;{payee || transaction.payee}&rdquo; to &ldquo;{category === "Custom" ? customCategory || "this category" : category}&rdquo;
+                    </span>
+                    <span className="text-amber-800/80 text-[10px]">
+                      Automatically assigns this category for future transactions and updates past transactions.
+                    </span>
+                  </div>
+                </label>
               </div>
 
               {/* Date Input */}

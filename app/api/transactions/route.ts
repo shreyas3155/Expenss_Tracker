@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTransactions, saveTransaction, updateTransaction, deleteTransaction } from "@/lib/db";
+import { getCategoryRules, findCategoryForPayee } from "@/lib/rules";
 import { BankTransaction } from "@/types/bankTransaction";
 
 export const dynamic = "force-dynamic";
@@ -49,12 +50,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Resolve category using smart Payee Category Rules if default or unset
+    let resolvedCategory = category;
+    if (!resolvedCategory || resolvedCategory === "Other" || resolvedCategory === "Uncategorized") {
+      try {
+        const rules = await getCategoryRules(USER_ID);
+        const match = findCategoryForPayee(String(payee), rules);
+        if (match) {
+          resolvedCategory = match.category;
+        }
+      } catch (err) {
+        console.warn("Rule matching check failed:", err);
+      }
+    }
+
     const tx: BankTransaction = {
       id: id || `tx-${Date.now()}`,
       date: date || new Date().toISOString(),
       payee: String(payee),
       amount: Number(amount),
-      category: category || "Other",
+      category: resolvedCategory || "Other",
       referenceNo: referenceNo || `REF-${Date.now()}`,
       notes: notes || "",
       bankNotification: bankNotification || "",

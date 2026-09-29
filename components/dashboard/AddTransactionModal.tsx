@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Plus, ArrowUpRight, ArrowDownRight, Calendar, Tag, CreditCard, FileText } from "lucide-react";
+import { X, Plus, ArrowUpRight, ArrowDownRight, Calendar, Tag, CreditCard, FileText, Sparkles, Check } from "lucide-react";
 import { TransactionItem } from "@/types/dashboard";
+import { CategoryRuleItem, findCategoryForPayee } from "@/lib/rules";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -42,19 +43,58 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [payee, setPayee] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
+  const [customCategoryInput, setCustomCategoryInput] = useState("");
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [sourceApp, setSourceApp] = useState<"GPay" | "PhonePe" | "Paytm" | "Cred" | "BHIM">("GPay");
   const [referenceNo, setReferenceNo] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Sync initialType when modal opens
+  // Category rules and auto-matching state
+  const [rules, setRules] = useState<CategoryRuleItem[]>([]);
+  const [matchedRule, setMatchedRule] = useState<{ category: string; matchedPayee: string } | null>(null);
+  const [createRoutingRule, setCreateRoutingRule] = useState(false);
+
+  // Fetch rules when modal opens
   useEffect(() => {
     if (isOpen) {
       setTxType(initialType);
       setCategory(initialType === "Credit" ? "Income" : "Food");
       setDate(new Date().toISOString().slice(0, 10));
+      setIsCustomCategory(false);
+      setCustomCategoryInput("");
+      setMatchedRule(null);
+      setCreateRoutingRule(false);
+
+      fetch("/api/rules")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.rules) setRules(data.rules);
+        })
+        .catch((e) => console.error("Could not fetch rules:", e));
     }
   }, [isOpen, initialType]);
+
+  // Live match payee against rules
+  const handlePayeeChange = (val: string) => {
+    setPayee(val);
+    if (!val.trim() || rules.length === 0) {
+      setMatchedRule(null);
+      return;
+    }
+
+    const match = findCategoryForPayee(val, rules);
+    if (match) {
+      setCategory(match.category);
+      setIsCustomCategory(false);
+      setMatchedRule({
+        category: match.category,
+        matchedPayee: val,
+      });
+    } else {
+      setMatchedRule(null);
+    }
+  };
 
   // When type toggles, set reasonable default category
   const handleTypeChange = (newType: "Credit" | "Debit") => {
@@ -70,12 +110,37 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
   const isCredit = txType === "Credit";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const allAvailableCategories = Array.from(
+    new Set([
+      ...(isCredit ? CREDIT_CATEGORIES : DEBIT_CATEGORIES),
+      ...rules.map((r) => r.category),
+    ])
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(amount);
     if (!payee.trim() || isNaN(num) || num <= 0) {
       alert("Please provide a valid recipient/sender name and positive amount.");
       return;
+    }
+
+    const finalCategory = isCustomCategory
+      ? customCategoryInput.trim() || "Other"
+      : category;
+
+    // If user asked to create a persistent rule for this person:
+    if (createRoutingRule && payee.trim() && finalCategory) {
+      fetch("/api/rules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_payee",
+          category: finalCategory,
+          payee: payee.trim(),
+          applyToPast: true,
+        }),
+      }).catch((err) => console.error("Error creating routing rule:", err));
     }
 
     const now = new Date();
@@ -84,8 +149,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     const newTx: TransactionItem = {
       id: `tx-${Date.now().toString().slice(-6)}`,
       merchant: payee.trim(),
-      title: notes.trim() || (isCredit ? `Received via ${sourceApp}` : `${category} payment`),
-      category: category,
+      title: notes.trim() || (isCredit ? `Received via ${sourceApp}` : `${finalCategory} payment`),
+      category: finalCategory,
       amount: num,
       amountFormatted: `₹${num.toLocaleString("en-IN")}`,
       type: isCredit ? "credit" : "debit",
@@ -206,18 +271,26 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
           {/* Payee / Sender Input */}
           <div>
-            <label className="block text-xs font-semibold text-[#1A1A1A] mb-1">
-              {isCredit ? "Sender / Received From *" : "Merchant / Paid To *"}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-[#1A1A1A]">
+                {isCredit ? "Sender / Received From *" : "Merchant / Paid To *"}
+              </label>
+              {matchedRule && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  Auto-routed to {matchedRule.category}
+                </span>
+              )}
+            </div>
             <input
               type="text"
               placeholder={
                 isCredit
                   ? "e.g. STACKDOT, Aayushi, Client, HDFC Bank"
-                  : "e.g. Swiggy, Uber, Chai Point, Grocery"
+                  : "e.g. Dhaval Patel, Swiggy, Uber, Chai Point"
               }
               value={payee}
-              onChange={(e) => setPayee(e.target.value)}
+              onChange={(e) => handlePayeeChange(e.target.value)}
               required
               className="w-full px-4 py-2.5 bg-white rounded-2xl border border-black/10 focus:border-black focus:outline-hidden text-xs sm:text-sm font-medium text-[#1A1A1A]"
             />
@@ -226,20 +299,41 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           {/* Category & Date Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white rounded-2xl border border-black/10 focus:border-black focus:outline-hidden text-xs font-medium text-[#1A1A1A]"
-              >
-                {(isCredit ? CREDIT_CATEGORIES : DEBIT_CATEGORIES).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-[#1A1A1A]">
+                  Category
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomCategory(!isCustomCategory)}
+                  className="text-[10px] font-bold text-black/60 hover:text-black underline cursor-pointer"
+                >
+                  {isCustomCategory ? "Select from list" : "+ Custom category"}
+                </button>
+              </div>
+
+              {isCustomCategory ? (
+                <input
+                  type="text"
+                  placeholder="Enter custom category name..."
+                  value={customCategoryInput}
+                  onChange={(e) => setCustomCategoryInput(e.target.value)}
+                  className="w-full px-3 py-2 bg-white rounded-2xl border border-black/10 focus:border-black focus:outline-hidden text-xs font-medium text-[#1A1A1A]"
+                  autoFocus
+                />
+              ) : (
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white rounded-2xl border border-black/10 focus:border-black focus:outline-hidden text-xs font-medium text-[#1A1A1A]"
+                >
+                  {allAvailableCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
@@ -255,6 +349,21 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Always Route Rule Checkbox */}
+          {payee.trim().length > 1 && !matchedRule && (
+            <label className="flex items-center gap-2 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 cursor-pointer select-none text-xs">
+              <input
+                type="checkbox"
+                checked={createRoutingRule}
+                onChange={(e) => setCreateRoutingRule(e.target.checked)}
+                className="rounded text-black accent-[#1A1A1A] cursor-pointer"
+              />
+              <span className="font-semibold text-amber-950">
+                ⚡ Always route payments to &ldquo;{payee}&rdquo; into &ldquo;{isCustomCategory ? customCategoryInput || "this category" : category}&rdquo;
+              </span>
+            </label>
+          )}
 
           {/* App / Method & Reference No */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

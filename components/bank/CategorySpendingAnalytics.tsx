@@ -39,6 +39,7 @@ import {
   renderCategoryIcon,
   toISODateString,
 } from "@/lib/categoryUtils";
+import { CategoryRulesManager } from "./CategoryRulesManager";
 
 interface CategorySpendingAnalyticsProps {
   transactions: BankTransaction[];
@@ -64,6 +65,7 @@ export const CategorySpendingAnalytics: React.FC<
   isLoading = false,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
+  const [viewTab, setViewTab] = useState<"charts" | "rules">("charts");
   const [timeframe, setTimeframe] = useState<AnalyticsTimeframe>("all");
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
@@ -285,62 +287,91 @@ export const CategorySpendingAnalytics: React.FC<
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A] tracking-tight">
-                  Category Spending Breakdown
+                  Category Spending & Payee Rules
                 </h1>
                 <p className="text-xs text-black/50 mt-0.5">
-                  Understand how much you spend on what with interactive bar and
-                  circular charts
+                  Understand how much you spend on what, and configure dedicated category rules for people like Dhaval Patel
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Type Filter (Debits vs Credits vs All) */}
+          {/* Main View Switcher: Charts vs Rules */}
           <div className="flex items-center gap-1 bg-[#F6F3EB] p-1 rounded-full border border-black/5 self-start md:self-auto">
             <button
-              onClick={() => setTypeFilter("debit")}
+              onClick={() => setViewTab("charts")}
               className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                typeFilter === "debit"
+                viewTab === "charts"
                   ? "bg-[#1A1A1A] text-white shadow-xs"
                   : "text-black/60 hover:text-black"
               }`}
             >
-              <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
-              <span>Debits (Expenses)</span>
+              <PieIcon className="w-3.5 h-3.5" />
+              <span>Charts</span>
             </button>
 
             <button
-              onClick={() => setTypeFilter("credit")}
+              onClick={() => setViewTab("rules")}
               className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                typeFilter === "credit"
+                viewTab === "rules"
                   ? "bg-[#1A1A1A] text-white shadow-xs"
                   : "text-black/60 hover:text-black"
               }`}
             >
-              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Credits (Income)</span>
-            </button>
-
-            <button
-              onClick={() => setTypeFilter("all")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                typeFilter === "all"
-                  ? "bg-[#1A1A1A] text-white shadow-xs"
-                  : "text-black/60 hover:text-black"
-              }`}
-            >
-              All
+              <Sparkles className="w-3.5 h-3.5 text-[#F5D547]" />
+              <span>Payee Rules</span>
             </button>
           </div>
+
+          {/* Type Filter (Debits vs Credits vs All) */}
+          {viewTab === "charts" && (
+            <div className="flex items-center gap-1 bg-[#F6F3EB] p-1 rounded-full border border-black/5 self-start md:self-auto">
+              <button
+                onClick={() => setTypeFilter("debit")}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  typeFilter === "debit"
+                    ? "bg-[#1A1A1A] text-white shadow-xs"
+                    : "text-black/60 hover:text-black"
+                }`}
+              >
+                <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
+                <span>Debits</span>
+              </button>
+
+              <button
+                onClick={() => setTypeFilter("credit")}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  typeFilter === "credit"
+                    ? "bg-[#1A1A1A] text-white shadow-xs"
+                    : "text-black/60 hover:text-black"
+                }`}
+              >
+                <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Credits</span>
+              </button>
+
+              <button
+                onClick={() => setTypeFilter("all")}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  typeFilter === "all"
+                    ? "bg-[#1A1A1A] text-white shadow-xs"
+                    : "text-black/60 hover:text-black"
+                }`}
+              >
+                All
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Date Filter Controls */}
-        <div className="mt-4 pt-4 border-t border-black/5 space-y-3">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            {/* Timeframe Presets */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 max-w-full">
-              <Calendar className="w-4 h-4 text-black/40 mr-1 shrink-0" />
-              {timeframes.map((tf) => {
+        {/* Date Filter Controls - only shown in charts mode */}
+        {viewTab === "charts" && (
+          <div className="mt-4 pt-4 border-t border-black/5 space-y-3">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              {/* Timeframe Presets */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 max-w-full">
+                <Calendar className="w-4 h-4 text-black/40 mr-1 shrink-0" />
+                {timeframes.map((tf) => {
                 const isActive = timeframe === tf.id;
                 return (
                   <button
@@ -468,10 +499,15 @@ export const CategorySpendingAnalytics: React.FC<
             </div>
           )}
         </div>
+      )}
       </div>
 
-      {/* KPI Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {viewTab === "rules" ? (
+        <CategoryRulesManager />
+      ) : (
+        <>
+          {/* KPI Metric Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Spend */}
         <div className="bg-white/85 backdrop-blur-md rounded-[22px] p-4 sm:p-5 border border-black/5 shadow-xs">
           <div className="flex items-center justify-between mb-2">
@@ -1068,6 +1104,8 @@ export const CategorySpendingAnalytics: React.FC<
             })}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
