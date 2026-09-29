@@ -6,13 +6,8 @@ import {
   Copy,
   Check,
   ExternalLink,
-  ArrowDownRight,
-  ArrowUpRight,
   Download,
-  Info,
   CreditCard,
-  Building2,
-  Mail,
   Edit3,
 } from "lucide-react";
 import { BankTransaction } from "@/types/bankTransaction";
@@ -72,7 +67,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#F5D547]" />
             <h3 className="text-base sm:text-lg font-bold text-[#1A1A1A]">
-              10-Column Bank Expense Ledger
+              Bank Expense Ledger
             </h3>
           </div>
           <p className="text-xs text-black/50 mt-0.5">
@@ -86,7 +81,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
           className="bg-white hover:bg-black/5 border border-black/10 text-[#1A1A1A] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Download className="w-3.5 h-3.5" />
-          <span>Export 10-Col Excel/CSV</span>
+          <span>Export Excel/CSV</span>
         </button>
       </div>
 
@@ -153,6 +148,11 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                         • {tx.source}
                       </span>
                     </div>
+                    {tx.notes && (
+                      <p className="text-[11px] text-black/60 italic truncate mt-1">
+                        Note: {tx.notes}
+                      </p>
+                    )}
                   </div>
 
                   <div className="text-right shrink-0">
@@ -209,16 +209,15 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
               <th className="py-2.5 px-3">Category (Col 4)</th>
               <th className="py-2.5 px-3">Type (Col 9)</th>
               <th className="py-2.5 px-3">Reference No / UTR (Col 5)</th>
+              <th className="py-2.5 px-3">Notes (Col 6)</th>
               <th className="py-2.5 px-3">Source / Method (Col 10)</th>
-              <th className="py-2.5 px-3">Bank Notification (Col 7)</th>
-              <th className="py-2.5 px-3">Message ID (Col 8)</th>
               <th className="py-2.5 px-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-black/5 text-xs">
             {isLoading ? (
               <tr>
-                <td colSpan={10} className="text-center py-16 text-black/50">
+                <td colSpan={9} className="text-center py-16 text-black/50">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="w-6 h-6 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" />
                     <span className="text-xs font-medium text-black/60">
@@ -229,7 +228,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center py-16 text-black/50">
+                <td colSpan={9} className="text-center py-16 text-black/50">
                   <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
                     <div className="w-12 h-12 rounded-2xl bg-black/5 flex items-center justify-center text-black/40 mb-1">
                       <CreditCard className="w-6 h-6" />
@@ -306,8 +305,8 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                           isDebit
-                            ? "bg-red-50 text-red-700"
-                            : "bg-emerald-50 text-emerald-700"
+                              ? "bg-red-50 text-red-700"
+                              : "bg-emerald-50 text-emerald-700"
                         }`}
                       >
                         {tx.type}
@@ -330,34 +329,25 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
                       </button>
                     </td>
 
+                    {/* Col 6: Notes */}
+                    <td className="py-3 px-3 max-w-[220px]">
+                      {tx.notes ? (
+                        <span
+                          className="truncate text-[11px] text-black/70 block"
+                          title={tx.notes}
+                        >
+                          {tx.notes}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-black/30 italic">—</span>
+                      )}
+                    </td>
+
                     {/* Col 10: Source / Method */}
                     <td className="py-3 px-3 whitespace-nowrap">
                       <span className="text-[11px] text-black/70 font-medium bg-white border border-black/5 px-2 py-0.5 rounded-md shadow-2xs">
                         {tx.source}
                       </span>
-                    </td>
-
-                    {/* Col 7: Bank Notification Snippet */}
-                    <td className="py-3 px-3 max-w-[200px]">
-                      <p className="truncate text-[11px] text-black/50 font-mono" title={tx.bankNotification}>
-                        {tx.bankNotification}
-                      </p>
-                    </td>
-
-                    {/* Col 8: Message ID */}
-                    <td className="py-3 px-3 whitespace-nowrap">
-                      <button
-                        onClick={(e) => copyText(tx.messageId, e)}
-                        className="font-mono text-[10px] text-black/40 hover:text-black flex items-center gap-1 cursor-pointer"
-                        title="Click to copy Gmail message ID"
-                      >
-                        <span>{tx.messageId.slice(0, 10)}...</span>
-                        {copiedId === tx.messageId ? (
-                          <Check className="w-2.5 h-2.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-2.5 h-2.5 opacity-40" />
-                        )}
-                      </button>
                     </td>
 
                     {/* Actions: Edit & Inspect */}
@@ -398,7 +388,7 @@ export const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
           Showing <strong className="text-[#1A1A1A]">{transactions.length}</strong> transactions
         </span>
         <span className="text-[11px]">
-          Auto-synchronized with Google Sheet column format (Col 1 to Col 10)
+          Synchronized with your bank alerts & Supabase database
         </span>
       </div>
     </div>

@@ -234,7 +234,7 @@ export const AutomaticBankDashboard: React.FC = () => {
     const rows = filteredTransactions
       .map(
         (t) =>
-          `"${t.date}","${t.payee.replace(/"/g, '""')}",${t.amount},"${t.category}","${t.referenceNo}","${t.notes.replace(/"/g, '""')}","${t.bankNotification.replace(/"/g, '""')}","${t.messageId}","${t.type}","${t.source}"`
+          `"${t.date}","${(t.payee || "").replace(/"/g, '""')}",${t.amount},"${t.category}","${t.referenceNo}","${(t.notes || "").replace(/"/g, '""')}","${(t.bankNotification || "").replace(/"/g, '""')}","${t.messageId || ""}","${t.type}","${t.source || ""}"`
       )
       .join("\n");
 
