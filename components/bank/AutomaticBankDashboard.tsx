@@ -7,7 +7,6 @@ import { GeminiSyncBadge } from "./GeminiSyncBadge";
 import { BankKpiCards } from "./BankKpiCards";
 import { BankFilterBar } from "./BankFilterBar";
 import { BankTransactionsTable } from "./BankTransactionsTable";
-import { BankSpendTrendChart } from "./BankSpendTrendChart";
 import { TransactionInspectorModal } from "./TransactionInspectorModal";
 import { GoogleAppsScriptModal } from "./GoogleAppsScriptModal";
 import { AddTransactionModal } from "../dashboard/AddTransactionModal";
@@ -420,42 +419,21 @@ export const AutomaticBankDashboard: React.FC = () => {
             />
           </div>
 
-          {/* Main Content Grid: Trend Chart & 10-Column Transaction Ledger */}
+          {/* Main Content: 10-Column Transaction Ledger */}
           <main className="space-y-5 flex-1">
-            <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-              {/* Left Column (4 cols): Cash Flow Trend Chart for the period */}
-              <div className="lg:col-span-4">
-                <BankSpendTrendChart
-                  transactions={filteredTransactions}
-                  timeframeLabel={
-                    filters.timeframe === "today"
-                      ? "Today"
-                      : filters.timeframe === "week"
-                      ? "This Week"
-                      : filters.timeframe === "month"
-                      ? "This Month"
-                      : "Custom Period"
-                  }
-                />
-              </div>
-
-              {/* Right Column (8 cols): 10-Column Bank Email & Gemini AI Ledger Table */}
-              <div className="lg:col-span-8">
-                <BankTransactionsTable
-                  transactions={filteredTransactions}
-                  onSelectTransaction={(tx) => {
-                    setSelectedTx(tx);
-                    setInspectorMode("view");
-                  }}
-                  onEditTransaction={(tx) => {
-                    setSelectedTx(tx);
-                    setInspectorMode("edit");
-                  }}
-                  onExportCsv={handleExportCsv}
-                  isLoading={isLoading}
-                />
-              </div>
-            </section>
+            <BankTransactionsTable
+              transactions={filteredTransactions}
+              onSelectTransaction={(tx) => {
+                setSelectedTx(tx);
+                setInspectorMode("view");
+              }}
+              onEditTransaction={(tx) => {
+                setSelectedTx(tx);
+                setInspectorMode("edit");
+              }}
+              onExportCsv={handleExportCsv}
+              isLoading={isLoading}
+            />
           </main>
         </>
       )}
