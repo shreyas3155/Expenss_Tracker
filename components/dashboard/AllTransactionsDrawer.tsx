@@ -31,8 +31,8 @@ export const AllTransactionsDrawer: React.FC<AllTransactionsDrawerProps> = ({
       t.upiId.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (selectedFilter === "all") return matchesSearch;
-    if (selectedFilter === "debits") return matchesSearch && t.type === "debit";
-    if (selectedFilter === "credits") return matchesSearch && t.type === "credit";
+    if (selectedFilter === "debits") return matchesSearch && String(t.type).toLowerCase() === "debit";
+    if (selectedFilter === "credits") return matchesSearch && String(t.type).toLowerCase() === "credit";
     return matchesSearch;
   });
 
@@ -156,7 +156,7 @@ export const AllTransactionsDrawer: React.FC<AllTransactionsDrawerProps> = ({
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right">
                     <span className="text-sm font-bold text-[#1A1A1A] tabular-nums block">
-                      {tx.type === "credit" ? "+" : "-"}
+                      {String(tx.type).toLowerCase() === "credit" ? "+" : "-"}
                       {tx.amountFormatted}
                     </span>
                     <span className="text-[10px] text-black/40 font-mono">

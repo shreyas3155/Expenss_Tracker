@@ -76,7 +76,7 @@ export const TransactionInspectorModal: React.FC<TransactionInspectorModalProps>
       setAmount(transaction.amount ?? 0);
       setCategory(transaction.category || "Other");
       setCustomCategory("");
-      setType(transaction.type === "Credit" ? "Credit" : "Debit");
+      setType(String(transaction.type || "").toLowerCase() === "credit" ? "Credit" : "Debit");
       setDate(transaction.date || "");
       setNotes(transaction.notes || "");
       setIsEditing(initialMode === "edit");

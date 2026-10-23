@@ -34,7 +34,7 @@ export async function getTransactions(): Promise<BankTransaction[]> {
       notes: tx.note || tx.notes || "",
       bankNotification: tx.raw_message || tx.bankNotification || "",
       messageId: tx.email_id || tx.messageId || tx.id,
-      type: (tx.type === "Credit" ? "Credit" : "Debit") as "Credit" | "Debit",
+      type: (String(tx.type || "").toLowerCase() === "credit" ? "Credit" : "Debit") as "Credit" | "Debit",
       source: tx.parsed_by || tx.source || "Supabase",
       aiParsed: Boolean(tx.parsed_by?.toLowerCase().includes("ai")),
       aiModel: tx.parsed_by || "Gemini 1.5 Flash",
